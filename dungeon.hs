@@ -6,8 +6,8 @@ describeRoom :: Raum -> String
 describeRoom x = text x ++ " " ++
                  "Du siehst im Norden " ++  (describeExit $ nord x) ++ 
                  ", im Osten " ++ (describeExit $ ost x) ++
-		 ", im Sueden " ++ (describeExit $ sued  x) ++
-		 " und im Westen " ++ (describeExit $ west  x) ++ "."
+                 ", im Sueden " ++ (describeExit $ sued  x) ++
+                 " und im Westen " ++ (describeExit $ west  x) ++ "."
 
 
 describeDoor :: Raum -> String
@@ -18,7 +18,7 @@ describeExit x = (maybe "eine Wand" describeDoor x)
 
 move :: Raum -> Char -> (Raum,String)
 move room dirChar = case (getDirection dirChar) room of
-		      Nothing -> (room, "Hier ist keine Geheimtuer.")
+                      Nothing -> (room, "Hier ist keine Geheimtuer.")
                       Just x -> (x, getFeedback dirChar)
 
 getDirection :: Char -> (Raum -> Maybe Raum)
@@ -50,7 +50,7 @@ gameLoop r = case r of
 
 
 main = do 
-	gameLoop start
-	where start = Raum (Just raum2) Nothing (Just raum1) Nothing False "Der Eingang des Dungeons."
-	      raum1 = Raum (Just start) Nothing Nothing Nothing True "Die Schatzkammer"
-	      raum2 = Raum Nothing Nothing (Just start) Nothing False "Ein kleiner Raum."
+        gameLoop start
+        where start = Raum (Just raum2) Nothing (Just raum1) Nothing False "Der Eingang des Dungeons."
+              raum1 = Raum (Just start) Nothing Nothing Nothing True "Die Schatzkammer"
+              raum2 = Raum Nothing Nothing (Just start) Nothing False "Ein kleiner Raum."
