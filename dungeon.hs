@@ -74,7 +74,7 @@ gameLoop r = case r of
 
 main = do 
         gameLoop start
-        where start = Raum (Just raum2) Nothing (Just shatz) Nothing False "Der Eingang des Dungeons." Nothing
-              shatz = Raum (Just start) Nothing Nothing Nothing True "Die Schatzkammer" Nothing
+        where start = Raum (Just raum2) Nothing (Just schatz) Nothing False "Der Eingang des Dungeons." Nothing
+              schatz = Raum (Just start) Nothing Nothing Nothing True "Die Schatzkammer" Nothing
               raum2 = Raum Nothing (Just raum1) (Just start) Nothing False "Ein kleiner Raum." Nothing
               raum1 = Raum Nothing Nothing Nothing (Just raum2) False "Ein Raum mit abgenagten Knochen." (Just Orc)
