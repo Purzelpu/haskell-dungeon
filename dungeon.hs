@@ -1,52 +1,79 @@
 import Data.Maybe
 
 
-data Thing = Wall | Door Room | Empty
-data Room = Room {north :: Thing, south :: Thing , west:: Thing, east:: Thing}
+data Thing = Wall | Door Room | Empty | Chest
+data Room = Room {north :: Thing, south :: Thing , west:: Thing, east:: Thing, extra :: [Thing]}
 data Hero = Hero {position :: Room}
+type Option = (Char,String, (Hero -> IO Hero))
 
 class Desc a where
         describe :: a -> String
 
 instance Desc Thing where
-        describe Wall = "a wall"
-        describe (Door x) = "a door"
+        describe Wall = "wall"
+        describe (Door x) = "door"
+        describe Chest = "chest"
 
 instance Desc Room where
-         describe (Room n s w e) = "North: " ++ describe n ++ " South: " ++ describe s ++ " West: "
+         describe (Room n s w e ex) = "North: " ++ describe n ++ " South: " ++ describe s ++ " West: "
                 ++ describe w ++ " East: " ++ describe e
+                ++ additionalDescription ex
+
+additionalDescription :: [Thing] -> String
+additionalDescription [] = ""
+additionalDescription l = "\nAdditionally you see: " ++ (concat $ map describe l)
+--TODO: format
 
 class Interactive a where
         inter :: a -> Hero -> IO Hero
+        actionName :: a -> String
 
 instance Interactive Thing where
         inter Wall hero = putStrLn "There is no way." >> return hero
         inter (Door toX) hero = putStrLn "You go through the door." >> return hero{position = toX}
-	inter Empty hero = return hero
+        inter Empty hero = return hero
+        inter Chest hero = putStrLn "You open the chest. It's empty" >> return hero
+        actionName (Door x) = "go through"
+        actionName Wall = "examine"
+        actionName Empty  ="do nothing"
+        actionName Chest = "open"
 
-getDirection :: Char -> IO (Room -> Thing)
-getDirection 'N' = putStrLn "You decide to go North" >> return north
-getDirection 'S' = putStrLn "You decide to go South" >> return south
-getDirection 'W' = putStrLn "You decide to go West" >> return west
-getDirection 'E' = putStrLn "You decide to go East" >> return east
-getDirection _ = putStrLn "You are confused" >> return (const Empty)
+getOptions :: Room -> [Option]
+getOptions (Room n s w e ex) = ('N', (actionName n) ++ " the Northern " ++ describe n, inter n)
+                        : ('S', (actionName s) ++ " the Southern " ++ describe s, inter s)
+                        : ('W',(actionName w) ++ " the Western " ++ describe w, inter w)
+                        : ('E', (actionName e) ++ " the Eastern " ++ describe e, inter e)
+                        : [('a', actionName x ++ " the " ++ describe x, inter x)| x<-ex]
+
+optionToString :: Option -> String
+optionToString (c,s,_) = c:')':' ':s
+
+describeOption :: [Option] -> Char -> String
+describeOption l c = head [b | (a,b,_)<-l, a == c]
+
+selectOption :: [Option] -> Char -> (Hero -> IO Hero)
+selectOption l c = head [b | (a,_,b)<-l, a == c]
 
 
 gameLoop :: Hero -> IO ()
 gameLoop hero = do 
         putStrLn $ describe $ position hero
+        mapM_  putStrLn (map optionToString  (getOptions $ position hero))
+        putStrLn "What do you do?"
         next <- getLine
+        putStrLn (describeOption (getOptions$position hero) (head next) )
         putStrLn ""
-        let direction = getDirection $ head next in do
-		dir <- direction
-                nextRound <- (inter (dir $ position hero) (hero))
-		gameLoop nextRound
+        let option = selectOption (getOptions$position hero) (head next) in do
+                nextStep <- option hero
+                gameLoop nextStep
+
 main = do
         gameLoop hero
         where 
-                start = Room door1 Wall Wall Wall
-                raum1 = Room Wall door2 Wall Wall
+                start = Room door1 Wall Wall Wall []
+                raum1 = Room Wall doorS Wall door2 []
+                raum2 = Room Wall Wall door1 Wall [Chest]
+                doorS = Door start
                 door1 = Door raum1
-                door2 = Door start
+                door2 = Door raum2
                 hero = Hero start
-        
