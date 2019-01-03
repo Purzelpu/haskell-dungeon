@@ -1,7 +1,7 @@
 import Data.Maybe
 
 
-data Thing = Wall | Door Room
+data Thing = Wall | Door Room | Empty
 data Room = Room {north :: Thing, south :: Thing , west:: Thing, east:: Thing}
 data Hero = Hero {position :: Room}
 
@@ -17,17 +17,19 @@ instance Desc Room where
                 ++ describe w ++ " East: " ++ describe e
 
 class Interactive a where
-        inter :: a -> Hero -> Hero
+        inter :: a -> Hero -> IO Hero
 
 instance Interactive Thing where
-        inter Wall hero = hero
-        inter (Door toX) hero = hero{position = toX}
+        inter Wall hero = putStrLn "There is no way." >> return hero
+        inter (Door toX) hero = putStrLn "You go through the door." >> return hero{position = toX}
+	inter Empty hero = return hero
 
-getDirection :: Char -> (Room -> Thing)
-getDirection 'N' = north
-getDirection 'S' = south
-getDirection 'W' = west
-getDirection 'E' = east
+getDirection :: Char -> IO (Room -> Thing)
+getDirection 'N' = putStrLn "You decide to go North" >> return north
+getDirection 'S' = putStrLn "You decide to go South" >> return south
+getDirection 'W' = putStrLn "You decide to go West" >> return west
+getDirection 'E' = putStrLn "You decide to go East" >> return east
+getDirection _ = putStrLn "You are confused" >> return (const Empty)
 
 
 gameLoop :: Hero -> IO ()
@@ -35,7 +37,10 @@ gameLoop hero = do
         putStrLn $ describe $ position hero
         next <- getLine
         putStrLn ""
-        gameLoop (inter ((getDirection $ head next ) $ position hero) (hero))
+        let direction = getDirection $ head next in do
+		dir <- direction
+                nextRound <- (inter (dir $ position hero) (hero))
+		gameLoop nextRound
 main = do
         gameLoop hero
         where 
