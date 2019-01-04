@@ -58,10 +58,9 @@ selectOption l c = head [b | (a,_,b)<-l, a == c]
 gameLoop :: Hero -> IO ()
 gameLoop hero = do 
         putStrLn $ describe $ position hero
-        mapM_  putStrLn (map optionToString  (getOptions $ position hero))
+        putStr $ unlines (map optionToString  (getOptions $ position hero))
         putStrLn "What do you do?"
         next <- getLine
-        putStrLn (describeOption (getOptions$position hero) (head next) )
         putStrLn ""
         let option = selectOption (getOptions$position hero) (head next) in do
                 nextStep <- option hero
