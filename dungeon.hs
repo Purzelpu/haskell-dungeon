@@ -3,7 +3,7 @@ import Data.Maybe
 
 data Thing = Wall | Door Room | Empty | Chest
 data Room = Room {north :: Thing, south :: Thing , west:: Thing, east:: Thing, extra :: [Thing]}
-data Hero = Hero {position :: Room}
+data Hero = Hero {position :: Room, treasure:: Bool}
 type Option = (Char,String, (Hero -> IO Hero))
 
 class Desc a where
@@ -32,7 +32,7 @@ instance Interactive Thing where
         inter Wall hero = putStrLn "There is no way." >> return hero
         inter (Door toX) hero = putStrLn "You go through the door." >> return hero{position = toX}
         inter Empty hero = return hero
-        inter Chest hero = putStrLn "You open the chest. It's empty" >> return hero
+        inter Chest hero = putStrLn "You open the chest. It contains the treasure" >> return hero{treasure=True}
         actionName (Door x) = "go through"
         actionName Wall = "examine"
         actionName Empty  ="do nothing"
@@ -44,6 +44,7 @@ getOptions (Room n s w e ex) = ('N', (actionName n) ++ " the Northern " ++ descr
                         : ('W',(actionName w) ++ " the Western " ++ describe w, inter w)
                         : ('E', (actionName e) ++ " the Eastern " ++ describe e, inter e)
                         : [('a', actionName x ++ " the " ++ describe x, inter x)| x<-ex]
+--TODO: increment a, idea triple-zip [a,b,c,..], [actionName x +++|x] and [inter x|x]
 
 optionToString :: Option -> String
 optionToString (c,s,_) = c:')':' ':s
@@ -56,7 +57,8 @@ selectOption l c = head [b | (a,_,b)<-l, a == c]
 
 
 gameLoop :: Hero -> IO ()
-gameLoop hero = do 
+gameLoop hero 
+ |treasure hero == False = do 
         putStrLn $ describe $ position hero
         putStr $ unlines (map optionToString  (getOptions $ position hero))
         putStrLn "What do you do?"
@@ -65,6 +67,8 @@ gameLoop hero = do
         let option = selectOption (getOptions$position hero) (head next) in do
                 nextStep <- option hero
                 gameLoop nextStep
+ |treasure hero == True = do
+        putStrLn "You found the treasure. Your quest has ended."
 
 main = do
         gameLoop hero
@@ -75,4 +79,4 @@ main = do
                 doorS = Door start
                 door1 = Door raum1
                 door2 = Door raum2
-                hero = Hero start
+                hero = Hero start False
