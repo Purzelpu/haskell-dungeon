@@ -43,8 +43,7 @@ getOptions (Room n s w e ex) = ('N', (actionName n) ++ " the Northern " ++ descr
                         : ('S', (actionName s) ++ " the Southern " ++ describe s, inter s)
                         : ('W',(actionName w) ++ " the Western " ++ describe w, inter w)
                         : ('E', (actionName e) ++ " the Eastern " ++ describe e, inter e)
-                        : [('a', actionName x ++ " the " ++ describe x, inter x)| x<-ex]
---TODO: increment a, idea triple-zip [a,b,c,..], [actionName x +++|x] and [inter x|x]
+                        : zip3 ['a' .. 'z'] [actionName x ++ " the " ++ describe x| x<-ex] [inter x|x<-ex]
 
 optionToString :: Option -> String
 optionToString (c,s,_) = c:')':' ':s
